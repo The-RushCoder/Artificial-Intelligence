@@ -174,3 +174,27 @@ while not minQ.empty():
             f = g + h  # Correct calculation of total cost
             new_state = State(adj_node, curr_state, g, f)
             minQ.put(new_state)
+
+
+#input2.txt
+"""
+6
+S 6 0
+A 6 0
+B 1 0
+C 2 0
+D 1 0
+G 0 0
+9
+S A 1
+S C 2
+S D 4
+A B 2
+B A 2
+B G 1
+C S 2
+C G 4
+D G 4
+S
+G
+"""
