@@ -1,116 +1,110 @@
-import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
+import math as m
 import random
+import matplotlib.pyplot as plt
 
-# Read dataset
-data_frame = pd.read_csv("dataset.csv")
-dataset_list = data_frame.values.tolist()
 
-# Split dataset into train, validation, and test sets
-Train_set = []
-Val_set = []
-Test_set = []
-for data in dataset_list:
-    x = random.uniform(0, 1)
-    if 0 <= x <= 0.7:
-        Train_set.append(data)
-    elif 0.7 < x <= 0.85:
-        Val_set.append(data)
-    else:
-        Test_set.append(data)
+def sigmoid(z):
+    return 1 / (1 + m.exp(-z))
 
-# Separate labels and features, insert bias term
-store_train = [data[-1] for data in Train_set]
-store_val = [data[-1] for data in Val_set]
-store_test = [data[-1] for data in Test_set]
 
-for data in Train_set:
-    data.insert(0, 1)
-for data in Val_set:
-    data.insert(0, 1)
-for data in Test_set:
-    data.insert(0, 1)
-
-# Sigmoid Function
-def sigmoid(Z):
-    return 1 / (1 + np.exp(-Z))
-
-# Train logistic regression model
-def train_model(Train_set, store_train, lr, max_iter):
-    Theta = np.random.rand(len(Train_set[0]))
-    Train_loss = []
-
-    for _ in range(max_iter):
+def TrainingData(trainingDataset, lr):
+    theta = [random.uniform(0, 1) for _ in range(len(trainingDataset[0]))]
+    history = []
+    itr = 0
+    while itr <= 500:
+        itr += 1
         TJ = 0
-        for j in range(len(Train_set)):
-            x = np.array(Train_set[j][:-1] + [1])
-            y = store_train[j]
-            Z = np.dot(Theta, x)
-            h = sigmoid(Z)
-            h = np.clip(h, 1e-15, 1 - 1e-15)
-            J = (-y * np.log(h)) - ((1 - y) * np.log(1 - h))
+        for X in trainingDataset:
+            z = sum([t * x for t, x in zip(theta, X[:-1] + [1])])
+            if z > 100:
+                h = 1
+            elif z < -100:
+                h = 0
+            else:
+                h = sigmoid(z)
+            y = X[-1]
+            h = min(max(h, 1e-15), 1 - 1e-15)
+            J = -y * m.log(h) - (1 - y) * m.log(1 - h)
             TJ += J
-            dv = (h - y) * x
-            Theta -= lr * dv
-        TJ /= len(Train_set)
-        Train_loss.append(TJ)
+            dv = [x * (h - y) for x in X[:-1] + [1]]
+            theta = [t - (dvi * lr) for t, dvi in zip(theta, dv)]
 
-    return Train_loss, Theta
+        TJ /= len(trainingDataset)
+        history.append(TJ)
 
-# Calculate validation accuracy for different learning rates
-learning_rates = [0.1, 0.01, 0.001, 0.0001]
-val_accs = []
+    return theta, history
 
-for lr in learning_rates:
-    Train_loss, Theta = train_model(Train_set, store_train, lr, max_iter=500)
 
-    Correct = 0
-    for i in range(len(Val_set)):
-        x = np.array(Val_set[i][:-1] + [1])
-        y = store_val[i]
-        Z = np.dot(Theta, x)
-        h = sigmoid(Z)
+def Validation(theta):
+    correct = 0
+    for V in validationDataset:
+        z = sum([t * v for t, v in zip(theta, V[:-1] + [1])])
+        if z > 100:
+            h = 1
+        elif z < -100:
+            h = 0
+        else:
+            h = sigmoid(z)
         if h >= 0.5:
             h = 1
         else:
             h = 0
+        y = V[-1]
         if h == y:
-            Correct += 1
+            correct += 1
+    val_acc = (correct * 100) / len(validationDataset)
+    return val_acc
 
-    val_acc = (Correct / len(Val_set)) * 100
-    val_accs.append(val_acc)
 
-# Create a table of learning rates and validation accuracies
-table = pd.DataFrame({'Learning Rate': learning_rates, 'Validation Accuracy': val_accs})
-print("Validation Accuracy for Different Learning Rates:")
-print(table)
+datacsv = pd.read_csv('dataset1.csv')
+data_set = []
+for index, row in datacsv.iterrows():
+    item = row.values.tolist()
+    data_set.append(item)
 
-# Choose the learning rate with maximum validation accuracy
-best_lr = learning_rates[np.argmax(val_accs)]
+trainingDataset = data_set[:int(len(data_set) * .70)]
+validationDataset = data_set[int(len(data_set) * .70):int(len(data_set) * .85)]
+testDataset = data_set[-int(len(data_set) * .15):]
 
-# Calculate test accuracy for the chosen learning rate
-Train_loss, Theta = train_model(Train_set, store_train, best_lr, max_iter=500)
+LearningRate = [0.1, 0.01, 0.001, 0.0001]
+max_vRate = 0
+for LR in LearningRate:
+    theta, train_loss = TrainingData(trainingDataset, LR)
+    vRate = Validation(theta)
+    print("Learning Rate:", LR, "Validation Accuracy:", vRate)
+    if vRate > max_vRate:
+        Rate = LR
+        max_vRate = vRate
+        loss = train_loss
+        bestTheta = theta
 
-Correct = 0
-for i in range(len(Test_set)):
-    x = np.array(Test_set[i][:-1] + [1])
-    y = store_test[i]
-    Z = np.dot(Theta, x)
-    h = sigmoid(Z)
+print("Max Validation Accuracy:", max_vRate, "For Learning Rate:", Rate)
+
+# TESTING
+correct = 0
+for T in testDataset:
+    z = sum([t * test for t, test in zip(bestTheta, T[:-1] + [1])])
+    if z > 100:
+        h = 1
+    elif z < -100:
+        h = 0
+    else:
+        h = sigmoid(z)
     if h >= 0.5:
         h = 1
     else:
         h = 0
+    y = T[-1]
     if h == y:
-        Correct += 1
+        correct += 1
+test_acc = (correct * 100) / len(testDataset)
+print("Test Accuracy:", test_acc)
 
-test_accuracy = (Correct / len(Test_set)) * 100
-print(f"\nThe Test accuracy for the chosen learning rate ({best_lr}) is: {test_accuracy} %")
-
-# Plot train loss vs. epoch graph
-plt.plot(range(0, 500), Train_loss)
+itr = [i for i in range(len(loss))]
+plt.plot(itr, loss)
 plt.xlabel('Epoch')
-plt.ylabel('Train Loss')
-plt.title('Train Loss vs. Epoch')
+plt.ylabel('Train_loss')
+plt.title('Epoch vs Train_loss')
+plt.grid(True)
 plt.show()
