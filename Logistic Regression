@@ -1,3 +1,4 @@
+#1
 import pandas as pd
 import math as m
 import random
@@ -108,3 +109,138 @@ plt.ylabel('Train_loss')
 plt.title('Epoch vs Train_loss')
 plt.grid(True)
 plt.show()
+
+
+
+
+
+"""
+#2
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import random
+
+#Reading a CSV file named "dataset.csv" into a pandas DataFrame called data_frame
+data_frame = pd.read_csv("dataset.csv")
+#Converting the DataFrame data_frame into a list of lists called dataset_list
+dataset_list = data_frame.values.tolist()
+#Initializing empty lists to store the training, validation, and test sets
+Train_set = []
+Val_set = []
+Test_set = []
+
+# Splitting dataset
+#Looping through each row in the dataset list to split it into training, validation, and test sets based on random probabilities
+for i in range(len(dataset_list)):
+    x = random.uniform(0, 1)
+    if 0 <= x <= 0.7:
+        Train_set.append(dataset_list[i])
+    elif 0.7 < x <= 0.85:
+        Val_set.append(dataset_list[i])
+    else:
+        Test_set.append(dataset_list[i])
+
+# Storing the value and removing the label
+store_train = []
+store_val = []
+store_test = []
+
+#Looping through each row in the training set to separate the label and features
+for i in range(0, len(Train_set)):
+    store_train.append(Train_set[i][0])
+    del Train_set[i][0]
+#Looping through each row in the validation set to separate the label and features
+for i in range(0, len(Val_set)):
+    store_val.append(Val_set[i][0])
+    del Val_set[i][0]
+#Looping through each row in the test set to separate the label and features
+for i in range(0, len(Test_set)):
+    store_test.append(Test_set[i][0])
+    del Test_set[i][0]
+
+# Inserting 1 to create X
+#Looping through each row in the training set to add a bias term (1) to each feature vector
+for i in range(len(Train_set)):
+    Train_set[i].insert(0, 1)
+#Looping through each row in the validation set to add a bias term (1) to each feature vector
+for i in range(len(Val_set)):
+    Val_set[i].insert(0, 1)
+#Looping through each row in the test set to add a bias term (1) to each feature vector
+for i in range(len(Test_set)):
+    Test_set[i].insert(0, 1)
+
+# Sigmoid Function
+#Defining a sigmoid function to compute the sigmoid of a given input
+def sigmoid(Z):
+    return 1 / (1 + np.exp(-Z))
+
+# Logistic Regression
+
+# Training
+# Initializing the parameter vector Theta with random values
+Theta = np.random.rand(3)
+Train_loss = [] # Initializing an empty list to store training losses
+Lr = 0.0001 #Setting the learning rate
+
+#Looping through 1000 iterations for training the logistic regression model
+for _ in range(1000):
+    TJ = 0 #Calculating the average training loss
+    #Looping through each sample in the training set to update the parameters using gradient descent
+    for j in range(len(Train_set)):
+        x = np.array(Train_set[j][:3])
+        y = store_train[j]
+        Z = np.dot(Theta, x)
+        h = sigmoid(Z)
+        # Clip the values to avoid math domain errors
+        h = np.clip(h, 1e-15, 1 - 1e-15)
+        J = (-y * np.log(h)) - ((1 - y) * np.log(1 - h))
+        TJ += J
+        dv = (h - y) * x
+        Theta -= Lr * dv
+    TJ /= len(Train_set)
+    Train_loss.append(TJ) #Appending the average training loss to the list of training losses
+
+# Graph
+#Plotting the training loss over epochs
+plt.plot(range(0, 1000), Train_loss)
+plt.xlabel('epoch')
+plt.ylabel('train-loss')
+plt.show()
+
+# Validation Set
+Correct = 0
+#Looping through each sample in the validation set to compute the validation accuracy
+for i in range(len(Val_set)):
+    x = np.array(Val_set[i][0:3])
+    y = store_val[i]
+    Z = np.dot(Theta, x)
+    h = sigmoid(Z)
+    if h >= 0.5:
+        h = 1
+    else:
+        h = 0
+    if h == y:
+        Correct += 1
+
+Validation_accuracy = (Correct / len(Val_set)) * 100 #Calculating the validation accuracy
+print(f"The validation accuracy of the dataset is: {Validation_accuracy} %")
+
+# Test Set
+Correct = 0
+#Looping through each sample in the test set to compute the test accuracy
+for i in range(len(Test_set)):
+    x = np.array(Test_set[i][0:3])
+    y = store_test[i]
+    Z = np.dot(Theta, x)
+    h = sigmoid(Z)
+    if h >= 0.5:
+        h = 1
+    else:
+        h = 0
+    if h == y:
+        Correct += 1
+
+Test_accuracy = (Correct / len(Test_set)) * 100 #Calculating the test accuracy
+print(f"The Test accuracy of the dataset is: {Test_accuracy} %")
+"""
