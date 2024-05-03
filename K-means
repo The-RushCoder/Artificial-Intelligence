@@ -71,6 +71,7 @@ def plot_clusters(data, clusters, centers, K):
 
 # Function to calculate inertia
 def calculate_inertia(data, clusters, centers):
+#Inertia is the sum of squared distances of samples to their closest cluster center.
     inertia = 0
     for k in range(len(clusters)):
         cluster_center = centers[k]
